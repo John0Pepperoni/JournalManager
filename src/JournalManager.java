@@ -66,10 +66,12 @@ class AddJournalEntry implements ActionListener {
         }
     }
 }
-class EntryList implements ActionListener {
+class EntryList extends MouseAdapter implements ActionListener {
     private JList<String> list;
     private JTextArea ta;
     private JFrame f;
+    private JFrame viewEntryFrame;
+    private JButton viewEntryBackButton;
     private JButton back;
     private DefaultListModel<String> entryList;
     private File textFile;
@@ -93,10 +95,13 @@ class EntryList implements ActionListener {
         } catch (FileNotFoundException fnfe) {
             JOptionPane.showMessageDialog(null, "Error: " + fnfe.getMessage());
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
         list = new JList<>(entryList);
         list.setBounds(100,50,200,200);
+        list.addMouseListener(this);
 
         back = new JButton("Back");
         back.setBounds(100,300,100,30);
@@ -108,6 +113,18 @@ class EntryList implements ActionListener {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setVisible(true);
         f.add(list);f.add(back);
+
+        viewEntryFrame = new JFrame("View Entry");
+        viewEntryFrame.setSize(600,600);
+        viewEntryFrame.setLayout(null);
+        viewEntryFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        viewEntryFrame.setVisible(false);
+
+        ta = new JTextArea();
+        ta.setBounds(30,50,530,400);
+        ta.setEditable(false);
+        viewEntryBackButton = new JButton("Back");
+        viewEntryBackButton.setBounds(100,500,100,30);
     }
     public void close() {
         f.dispose();
@@ -115,6 +132,47 @@ class EntryList implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == back) {
             close();
+        }
+    }
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+            int index = list.locationToIndex(e.getPoint());
+            String selectedDate = list.getModel().getElementAt(index);
+            StringBuilder entryText = new StringBuilder();
+            try (Scanner scanner = new Scanner(new File("journal.txt"))) {
+                boolean inEntry = false;
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    if (line.startsWith("(" + selectedDate + ")")) {
+                        inEntry = true;
+                        entryText.append(line.substring(12)).append("\n");
+                        continue;
+                    }
+                    if (inEntry) {
+                        entryText.append(line).append("\n");
+                    }
+                    if (line.startsWith("-----/-----/-----/-----/-----/-----/-----")) {
+                        if (inEntry) break;
+                    }
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error reading entry: " + ex.getMessage());
+            }
+            ta.setText(entryText.toString());
+
+            viewEntryFrame.setVisible(true);
+            viewEntryFrame.add(ta);
+            viewEntryFrame.add(viewEntryBackButton);
+
+            for (ActionListener al : viewEntryBackButton.getActionListeners()) {
+                viewEntryBackButton.removeActionListener(al);
+            }
+            viewEntryBackButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    viewEntryFrame.dispose();
+                }
+            });
         }
     }
 }
