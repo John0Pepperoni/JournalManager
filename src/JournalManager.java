@@ -5,6 +5,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.*;
 class AddJournalEntry implements ActionListener {
     private JFrame f;
     private JButton submitButton;
@@ -14,6 +15,7 @@ class AddJournalEntry implements ActionListener {
     private LocalDate ld;
     private String date;
     AddJournalEntry() {
+
         ld = LocalDate.now();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         date = dtf.format(ld);
@@ -76,24 +78,28 @@ class EntryList extends MouseAdapter implements ActionListener {
     private DefaultListModel<String> entryList;
     private File textFile;
     private Scanner reader;
+    private Pattern datePatternRegex;
+    private Matcher datePatternMatcher;
     EntryList() {
         entryList = new DefaultListModel<>();
         try {
             String line;
             textFile = new File("journal.txt");
             reader = new Scanner(textFile);
+            datePatternRegex = Pattern.compile("^\\(\\d{2}/\\d{2}/\\d{4}\\)");
             while(reader.hasNextLine()) {
                 line = reader.nextLine();
-                if (line.startsWith("(")) {
+                datePatternMatcher = datePatternRegex.matcher(line);
+                if (datePatternMatcher.find()) {
                     String date = line.substring(1,11);
                     entryList.addElement(date);
                 }
             }
-            if(reader == null) {
+            if(entryList.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "No entries found");
             }
         } catch (FileNotFoundException fnfe) {
-            JOptionPane.showMessageDialog(null, "Error: " + fnfe.getMessage());
+               JOptionPane.showMessageDialog(null, "Error: " + fnfe.getMessage());
         } finally {
             if (reader != null) {
                 reader.close();
@@ -148,15 +154,15 @@ class EntryList extends MouseAdapter implements ActionListener {
                         entryText.append(line.substring(12)).append("\n");
                         continue;
                     }
-                    if (inEntry) {
-                        entryText.append(line).append("\n");
-                    }
                     if (line.startsWith("-----/-----/-----/-----/-----/-----/-----")) {
                         if (inEntry) break;
                     }
+                    if (inEntry) {
+                        entryText.append(line).append("\n");
+                    }
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Error reading entry: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(null, "Error reading entry: " + ex.getMessage());
             }
             ta.setText(entryText.toString());
 
