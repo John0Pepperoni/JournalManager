@@ -24,9 +24,13 @@ class AddJournalEntry implements ActionListener {
         f.setSize(600,600);
         f.setLayout(null);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLocationRelativeTo(null);
 
         ta = new JTextArea();
         ta.setBounds(30,50,530,400);
+        // Wrap the entry text area in a scroll pane
+        JScrollPane taScrollPane = new JScrollPane(ta);
+        taScrollPane.setBounds(30,50,530,400);
 
         l = new JLabel("Add Entry: ");
         l.setBounds(100,20,150,30);
@@ -42,7 +46,8 @@ class AddJournalEntry implements ActionListener {
 
         f.add(l);
         f.add(submitButton);f.add(cancelButton);
-        f.add(ta);
+        // Add the scroll pane instead of the bare text area
+        f.add(taScrollPane);
         f.setVisible(true);
     }
     public void actionPerformed(ActionEvent e) {
@@ -76,6 +81,7 @@ class EntryList extends MouseAdapter implements ActionListener {
     private JButton viewEntryBackButton;
     private JButton back;
     private DefaultListModel<String> entryList;
+    private JScrollPane scrollPane;
     private File textFile;
     private Scanner reader;
     private Pattern datePatternRegex;
@@ -109,7 +115,10 @@ class EntryList extends MouseAdapter implements ActionListener {
         list.setBounds(100,50,200,200);
         list.addMouseListener(this);
 
+        scrollPane = new JScrollPane(list);
+        scrollPane.setBounds(100,50,200,200);
         back = new JButton("Back");
+
         back.setBounds(100,300,100,30);
         back.addActionListener(this);
 
@@ -117,20 +126,29 @@ class EntryList extends MouseAdapter implements ActionListener {
         f.setSize(400,400);
         f.setLayout(null);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLocationRelativeTo(null);
+
+        f.add(scrollPane);
+        f.add(back);
         f.setVisible(true);
-        f.add(list);f.add(back);
 
         viewEntryFrame = new JFrame("View Entry");
         viewEntryFrame.setSize(600,600);
         viewEntryFrame.setLayout(null);
         viewEntryFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         viewEntryFrame.setVisible(false);
+        viewEntryFrame.setLocationRelativeTo(null);
 
         ta = new JTextArea();
         ta.setBounds(30,50,530,400);
         ta.setEditable(false);
         viewEntryBackButton = new JButton("Back");
         viewEntryBackButton.setBounds(100,500,100,30);
+
+        JScrollPane viewScrollPane = new JScrollPane(ta);
+        viewScrollPane.setBounds(30,50,530,400);
+        viewEntryFrame.add(viewScrollPane);
+        viewEntryFrame.add(viewEntryBackButton);
     }
     public void close() {
         f.dispose();
@@ -167,8 +185,6 @@ class EntryList extends MouseAdapter implements ActionListener {
             ta.setText(entryText.toString());
 
             viewEntryFrame.setVisible(true);
-            viewEntryFrame.add(ta);
-            viewEntryFrame.add(viewEntryBackButton);
 
             for (ActionListener al : viewEntryBackButton.getActionListeners()) {
                 viewEntryBackButton.removeActionListener(al);
@@ -194,6 +210,7 @@ public class JournalManager implements ActionListener {
         f.setSize(400,400);
         f.setLayout(null);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLocationRelativeTo(null);
 
         mainTitle = new JLabel("Journal Manager");
         mainTitle.setBounds(90,20,500,37);
